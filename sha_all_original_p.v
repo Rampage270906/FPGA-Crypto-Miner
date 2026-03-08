@@ -12,6 +12,7 @@ endmodule
 module sha256_K_machine (
           input clk,
           input rst,
+          input en,
           output [31:0] K
           );
 
@@ -40,7 +41,7 @@ module sha256_K_machine (
                   32'h748f82ee, 32'h78a5636f, 32'h84c87814, 32'h8cc70208,
                   32'h90befffa, 32'ha4506ceb, 32'hbef9a3f7, 32'hc67178f2
               };
-          end else begin
+          end else if (en) begin
               rom_q <= rom_d;
           end
       end
@@ -71,12 +72,10 @@ module W_machine #(parameter WORDSIZE=1) (
           output [WORDSIZE-1:0] W
           );
 
-      // W(t-n) values, from the perspective of Wt_next
       assign W_tm2 = W_stack_q[WORDSIZE*2-1:WORDSIZE*1];
       assign W_tm15 = W_stack_q[WORDSIZE*15-1:WORDSIZE*14];
       wire [WORDSIZE-1:0] W_tm7 = W_stack_q[WORDSIZE*7-1:WORDSIZE*6];
       wire [WORDSIZE-1:0] W_tm16 = W_stack_q[WORDSIZE*16-1:WORDSIZE*15];
-      // Wt_next is the next Wt to be pushed to the queue, will be consumed in 16 rounds
       wire [WORDSIZE-1:0] Wt_next = s1_Wtm2 + W_tm7 + s0_Wtm15 + W_tm16;
 
       reg [WORDSIZE*16-1:0] W_stack_q;
@@ -93,7 +92,7 @@ module W_machine #(parameter WORDSIZE=1) (
       end
 
       endmodule
-      
+
 module sha256_S1 (
           input wire [31:0] x,
           output wire [31:0] S1
@@ -101,7 +100,7 @@ module sha256_S1 (
 
       assign S1 = ({x[5:0], x[31:6]} ^ {x[10:0], x[31:11]} ^ {x[24:0], x[31:25]});
       endmodule
-      
+
 module Ch #(parameter WORDSIZE=0) (
           input wire [WORDSIZE-1:0] x, y, z,
           output wire [WORDSIZE-1:0] Ch
@@ -109,7 +108,7 @@ module Ch #(parameter WORDSIZE=0) (
 
       assign Ch = ((x & y) ^ (~x & z));
       endmodule
-      
+
 module sha256_S0 (
           input wire [31:0] x,
           output wire [31:0] S0
@@ -117,36 +116,59 @@ module sha256_S0 (
 
       assign S0 = ({x[1:0], x[31:2]} ^ {x[12:0], x[31:13]} ^ {x[21:0], x[31:22]});
       endmodule
-      
- module Maj #(parameter WORDSIZE=0) (
+
+module Maj #(parameter WORDSIZE=0) (
           input wire [WORDSIZE-1:0] x, y, z,
           output wire [WORDSIZE-1:0] Maj
           );
 
       assign Maj = (x & y) ^ (x & z) ^ (y & z);
       endmodule
-      
+
 module sha2_round #(parameter WORDSIZE=0) (
+          input clk,
           input [WORDSIZE-1:0] Kj, Wj,
           input [WORDSIZE-1:0] a_in, b_in, c_in, d_in, e_in, f_in, g_in, h_in,
           input [WORDSIZE-1:0] Ch_e_f_g, Maj_a_b_c, S0_a, S1_e,
           output [WORDSIZE-1:0] a_out, b_out, c_out, d_out, e_out, f_out, g_out, h_out
           );
 
-      wire [WORDSIZE-1:0] T1 = h_in + S1_e + Ch_e_f_g + Kj + Wj;
-      wire [WORDSIZE-1:0] T2 = S0_a + Maj_a_b_c;
+    // Stage 1 registers
+    reg [WORDSIZE-1:0] T1_partial_q1, T2_q1, Kj_q, Wj_q;
+    reg [WORDSIZE-1:0] a_q1, b_q1, c_q1, d_q1, e_q1, f_q1, g_q1;
 
-      assign a_out = T1 + T2;
-      assign b_out = a_in;
-      assign c_out = b_in;
-      assign d_out = c_in;
-      assign e_out = d_in + T1;
-      assign f_out = e_in;
-      assign g_out = f_in;
-      assign h_out = g_in;
-      endmodule
-      
+    // Stage 2 registers
+    reg [WORDSIZE-1:0] T1_q2, T2_q2;
+    reg [WORDSIZE-1:0] a_q2, b_q2, c_q2, d_q2, e_q2, f_q2, g_q2;
+
+    always @(posedge clk) begin
+        // Stage 1: compute partial T1 and T2
+        T1_partial_q1 <= h_in + S1_e + Ch_e_f_g;
+        T2_q1         <= S0_a + Maj_a_b_c;
+        Kj_q <= Kj; Wj_q <= Wj;
+        a_q1 <= a_in; b_q1 <= b_in; c_q1 <= c_in; d_q1 <= d_in;
+        e_q1 <= e_in; f_q1 <= f_in; g_q1 <= g_in;
+
+        // Stage 2: finish T1
+        T1_q2 <= T1_partial_q1 + Kj_q + Wj_q;
+        T2_q2 <= T2_q1;
+        a_q2 <= a_q1; b_q2 <= b_q1; c_q2 <= c_q1; d_q2 <= d_q1;
+        e_q2 <= e_q1; f_q2 <= f_q1; g_q2 <= g_q1;
+    end
+
+    // Stage 3: final outputs (combinational)
+    assign a_out = T1_q2 + T2_q2;
+    assign b_out = a_q2;
+    assign c_out = b_q2;
+    assign d_out = c_q2;
+    assign e_out = d_q2 + T1_q2;
+    assign f_out = e_q2;
+    assign g_out = f_q2;
+    assign h_out = g_q2;
+    endmodule
+
 module sha256_round (
+          input clk,
           input [31:0] Kj, Wj,
           input [31:0] a_in, b_in, c_in, d_in, e_in, f_in, g_in, h_in,
           output [31:0] a_out, b_out, c_out, d_out, e_out, f_out, g_out, h_out
@@ -171,7 +193,7 @@ module sha256_round (
       );
 
       sha2_round #(.WORDSIZE(32)) sha256_round_inner (
-          .Kj(Kj), .Wj(Wj),
+          .clk(clk), .Kj(Kj), .Wj(Wj),
           .a_in(a_in), .b_in(b_in), .c_in(c_in), .d_in(d_in),
           .e_in(e_in), .f_in(f_in), .g_in(g_in), .h_in(h_in),
           .Ch_e_f_g(Ch_e_f_g), .Maj_a_b_c(Maj_a_b_c), .S0_a(S0_a), .S1_e(S1_e),
@@ -180,6 +202,7 @@ module sha256_round (
       );
 
       endmodule
+
 module sha256_block (
           input clk, rst,
           input [255:0] H_in,
@@ -190,22 +213,46 @@ module sha256_block (
           );
 
       reg [6:0] round;
-      wire [31:0] a_in = H_in[255:224], b_in = H_in[223:192], c_in = H_in[191:160], d_in = H_in[159:128];
-      wire [31:0] e_in = H_in[127:96], f_in = H_in[95:64], g_in = H_in[63:32], h_in = H_in[31:0];
+      wire [31:0] a_in = H_in[255:224], b_in = H_in[223:192];
+      wire [31:0] c_in = H_in[191:160], d_in = H_in[159:128];
+      wire [31:0] e_in = H_in[127:96],  f_in = H_in[95:64];
+      wire [31:0] g_in = H_in[63:32],   h_in = H_in[31:0];
+
       reg [31:0] a_q, b_q, c_q, d_q, e_q, f_q, g_q, h_q;
       wire [31:0] a_d, b_d, c_d, d_d, e_d, f_d, g_d, h_d;
       wire [31:0] W_tm2, W_tm15, s1_Wtm2, s0_Wtm15, Wj, Kj;
+
+      reg [1:0] stall;
+
+      // Forwarding: use a_d directly when pipeline is running (stall==0)
+      // During stall, hold a_q steady so pipeline fills with correct values
+      wire [31:0] a_next = (stall > 0) ? a_q : a_d;
+      wire [31:0] b_next = (stall > 0) ? b_q : b_d;
+      wire [31:0] c_next = (stall > 0) ? c_q : c_d;
+      wire [31:0] d_next = (stall > 0) ? d_q : d_d;
+      wire [31:0] e_next = (stall > 0) ? e_q : e_d;
+      wire [31:0] f_next = (stall > 0) ? f_q : f_d;
+      wire [31:0] g_next = (stall > 0) ? g_q : g_d;
+      wire [31:0] h_next = (stall > 0) ? h_q : h_d;
+
       assign H_out = {
-          a_in + a_q, b_in + b_q, c_in + c_q, d_in + d_q, e_in + e_q, f_in + f_q, g_in + g_q, h_in + h_q
+          a_in + a_q, b_in + b_q, c_in + c_q, d_in + d_q,
+          e_in + e_q, f_in + f_q, g_in + g_q, h_in + h_q
       };
       assign output_valid = round == 64;
 
       always @(posedge clk)
       begin
-          if (input_valid) begin
+          if (rst) begin
+              round <= 0;
+              stall <= 2;
+          end else if (input_valid) begin
               a_q <= a_in; b_q <= b_in; c_q <= c_in; d_q <= d_in;
               e_q <= e_in; f_q <= f_in; g_q <= g_in; h_q <= h_in;
               round <= 0;
+              stall <= 2;        // hold for 2 cycles to fill pipeline
+          end else if (stall > 0) begin
+              stall <= stall - 1; // pipeline filling, don't update a_q or round
           end else begin
               a_q <= a_d; b_q <= b_d; c_q <= c_d; d_q <= d_d;
               e_q <= e_d; f_q <= f_d; g_q <= g_d; h_q <= h_d;
@@ -213,16 +260,17 @@ module sha256_block (
           end
       end
 
+      // Feed forwarded values into round function
       sha256_round sha256_round (
-          .Kj(Kj), .Wj(Wj),
-          .a_in(a_q), .b_in(b_q), .c_in(c_q), .d_in(d_q),
-          .e_in(e_q), .f_in(f_q), .g_in(g_q), .h_in(h_q),
+          .clk(clk), .Kj(Kj), .Wj(Wj),
+          .a_in(a_next), .b_in(b_next), .c_in(c_next), .d_in(d_next),
+          .e_in(e_next), .f_in(f_next), .g_in(g_next), .h_in(h_next),
           .a_out(a_d), .b_out(b_d), .c_out(c_d), .d_out(d_d),
           .e_out(e_d), .f_out(f_d), .g_out(g_d), .h_out(h_d)
       );
 
       sha256_s0 sha256_s0 (.x(W_tm15), .s0(s0_Wtm15));
-      sha256_s1 sha256_s1 (.x(W_tm2), .s1(s1_Wtm2));
+      sha256_s1 sha256_s1 (.x(W_tm2),  .s1(s1_Wtm2));
 
       W_machine #(.WORDSIZE(32)) W_machine (
           .clk(clk),
@@ -232,8 +280,9 @@ module sha256_block (
           .W(Wj)
       );
 
+      // K machine gated with stall==0 so K stays in sync with rounds
       sha256_K_machine sha256_K_machine (
-          .clk(clk), .rst(input_valid), .K(Kj)
+          .clk(clk), .rst(input_valid), .en(stall == 0), .K(Kj)
       );
 
       endmodule
