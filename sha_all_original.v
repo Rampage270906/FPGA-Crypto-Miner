@@ -10,89 +10,122 @@ module sha256_H_0(
 endmodule
 
 module sha256_K_machine (
-          input clk,
-          input rst,
-          output [31:0] K
-          );
-
-      reg [2047:0] rom_q;
-      wire [2047:0] rom_d = {rom_q[2015:0], rom_q[2047:2016]};
-      assign K = rom_q[2047:2016];
-
-      always @(posedge clk)
-      begin
-          if (rst) begin
-              rom_q <= {
-                  32'h428a2f98, 32'h71374491, 32'hb5c0fbcf, 32'he9b5dba5,
-                  32'h3956c25b, 32'h59f111f1, 32'h923f82a4, 32'hab1c5ed5,
-                  32'hd807aa98, 32'h12835b01, 32'h243185be, 32'h550c7dc3,
-                  32'h72be5d74, 32'h80deb1fe, 32'h9bdc06a7, 32'hc19bf174,
-                  32'he49b69c1, 32'hefbe4786, 32'h0fc19dc6, 32'h240ca1cc,
-                  32'h2de92c6f, 32'h4a7484aa, 32'h5cb0a9dc, 32'h76f988da,
-                  32'h983e5152, 32'ha831c66d, 32'hb00327c8, 32'hbf597fc7,
-                  32'hc6e00bf3, 32'hd5a79147, 32'h06ca6351, 32'h14292967,
-                  32'h27b70a85, 32'h2e1b2138, 32'h4d2c6dfc, 32'h53380d13,
-                  32'h650a7354, 32'h766a0abb, 32'h81c2c92e, 32'h92722c85,
-                  32'ha2bfe8a1, 32'ha81a664b, 32'hc24b8b70, 32'hc76c51a3,
-                  32'hd192e819, 32'hd6990624, 32'hf40e3585, 32'h106aa070,
-                  32'h19a4c116, 32'h1e376c08, 32'h2748774c, 32'h34b0bcb5,
-                  32'h391c0cb3, 32'h4ed8aa4a, 32'h5b9cca4f, 32'h682e6ff3,
-                  32'h748f82ee, 32'h78a5636f, 32'h84c87814, 32'h8cc70208,
-                  32'h90befffa, 32'ha4506ceb, 32'hbef9a3f7, 32'hc67178f2
-              };
-          end else begin
-              rom_q <= rom_d;
-          end
-      end
+    input wire [5:0] round,
+    output reg [31:0] K0,
+    output reg [31:0] K1
+);
+    always @(*) begin
+        case (round[5:1])
+            5'd00: begin K0 = 32'h428a2f98; K1 = 32'h71374491; end
+            5'd01: begin K0 = 32'hb5c0fbcf; K1 = 32'he9b5dba5; end
+            5'd02: begin K0 = 32'h3956c25b; K1 = 32'h59f111f1; end
+            5'd03: begin K0 = 32'h923f82a4; K1 = 32'hab1c5ed5; end
+            5'd04: begin K0 = 32'hd807aa98; K1 = 32'h12835b01; end
+            5'd05: begin K0 = 32'h243185be; K1 = 32'h550c7dc3; end
+            5'd06: begin K0 = 32'h72be5d74; K1 = 32'h80deb1fe; end
+            5'd07: begin K0 = 32'h9bdc06a7; K1 = 32'hc19bf174; end
+            5'd08: begin K0 = 32'he49b69c1; K1 = 32'hefbe4786; end
+            5'd09: begin K0 = 32'h0fc19dc6; K1 = 32'h240ca1cc; end
+            5'd10: begin K0 = 32'h2de92c6f; K1 = 32'h4a7484aa; end
+            5'd11: begin K0 = 32'h5cb0a9dc; K1 = 32'h76f988da; end
+            5'd12: begin K0 = 32'h983e5152; K1 = 32'ha831c66d; end
+            5'd13: begin K0 = 32'hb00327c8; K1 = 32'hbf597fc7; end
+            5'd14: begin K0 = 32'hc6e00bf3; K1 = 32'hd5a79147; end
+            5'd15: begin K0 = 32'h06ca6351; K1 = 32'h14292967; end
+            5'd16: begin K0 = 32'h27b70a85; K1 = 32'h2e1b2138; end
+            5'd17: begin K0 = 32'h4d2c6dfc; K1 = 32'h53380d13; end
+            5'd18: begin K0 = 32'h650a7354; K1 = 32'h766a0abb; end
+            5'd19: begin K0 = 32'h81c2c92e; K1 = 32'h92722c85; end
+            5'd20: begin K0 = 32'ha2bfe8a1; K1 = 32'ha81a664b; end
+            5'd21: begin K0 = 32'hc24b8b70; K1 = 32'hc76c51a3; end
+            5'd22: begin K0 = 32'hd192e819; K1 = 32'hd6990624; end
+            5'd23: begin K0 = 32'hf40e3585; K1 = 32'h106aa070; end
+            5'd24: begin K0 = 32'h19a4c116; K1 = 32'h1e376c08; end
+            5'd25: begin K0 = 32'h2748774c; K1 = 32'h34b0bcb5; end
+            5'd26: begin K0 = 32'h391c0cb3; K1 = 32'h4ed8aa4a; end
+            5'd27: begin K0 = 32'h5b9cca4f; K1 = 32'h682e6ff3; end
+            5'd28: begin K0 = 32'h748f82ee; K1 = 32'h78a5636f; end
+            5'd29: begin K0 = 32'h84c87814; K1 = 32'h8cc70208; end
+            5'd30: begin K0 = 32'h90befffa; K1 = 32'ha4506ceb; end
+            5'd31: begin K0 = 32'hbef9a3f7; K1 = 32'hc67178f2; end
+            default: begin K0 = 32'h0; K1 = 32'h0; end
+        endcase
+    end
 endmodule
 
-module sha256_s0 (
-          input wire [31:0] x,
-          output wire [31:0] s0
-          );
+module sha256_pipeline_stage_dual #(
+    parameter [5:0] ROUND_BASE = 0
+)(
+    input wire clk,
+    input wire rst,
+    input wire valid_in,
+    input wire [511:0] W_in,
+    input wire [255:0] H_in,
+    input wire [255:0] H_base_in,
+    output reg valid_out,
+    output reg [511:0] W_out,
+    output reg [255:0] H_out,
+    output reg [255:0] H_base_out
+);
+    // Unpack current H state
+    wire [31:0] a = H_in[255:224], b = H_in[223:192], c = H_in[191:160], d = H_in[159:128];
+    wire [31:0] e = H_in[127:96],  f = H_in[95:64],   g = H_in[63:32],   h = H_in[31:0];
 
-      assign s0 = ({x[6:0], x[31:7]} ^ {x[17:0], x[31:18]} ^ (x >> 3));
+    // Fetch static constants for this specific stage
+    wire [31:0] K0, K1;
+    sha256_K_machine k_inst (
+        .round(ROUND_BASE[5:0]),
+        .K0(K0),
+        .K1(K1)
+    );
 
+    // Compute W[t+16] (W0_next)
+    wire [31:0] W0_tm16 = W_in[511:480];
+    wire [31:0] W0_tm15 = W_in[479:448];
+    wire [31:0] W0_tm7  = W_in[223:192];
+    wire [31:0] W0_tm2  = W_in[63:32];
+    wire [31:0] s0_W0tm15 = ({W0_tm15[6:0], W0_tm15[31:7]} ^ {W0_tm15[17:0], W0_tm15[31:18]} ^ (W0_tm15 >> 3));
+    wire [31:0] s1_W0tm2  = ({W0_tm2[16:0], W0_tm2[31:17]} ^ {W0_tm2[18:0], W0_tm2[31:19]} ^ (W0_tm2 >> 10));
+    wire [31:0] W0_next = (s1_W0tm2 + W0_tm7) + (s0_W0tm15 + W0_tm16);
+
+    // Compute W[t+17] (W1_next) in parallel
+    wire [31:0] W1_tm16 = W_in[479:448];
+    wire [31:0] W1_tm15 = W_in[447:416];
+    wire [31:0] W1_tm7  = W_in[191:160];
+    wire [31:0] W1_tm2  = W_in[31:0]; 
+    wire [31:0] s0_W1tm15 = ({W1_tm15[6:0], W1_tm15[31:7]} ^ {W1_tm15[17:0], W1_tm15[31:18]} ^ (W1_tm15 >> 3));
+    wire [31:0] s1_W1tm2  = ({W1_tm2[16:0], W1_tm2[31:17]} ^ {W1_tm2[18:0], W1_tm2[31:19]} ^ (W1_tm2 >> 10));
+    wire [31:0] W1_next = (s1_W1tm2 + W1_tm7) + (s0_W1tm15 + W1_tm16);
+
+    // Round 0 Logic
+    wire [31:0] a_mid, b_mid, c_mid, d_mid, e_mid, f_mid, g_mid, h_mid;
+    sha256_round round0_inst (
+        .Kj(K0), .Wj(W0_tm16),
+        .a_in(a), .b_in(b), .c_in(c), .d_in(d), .e_in(e), .f_in(f), .g_in(g), .h_in(h),
+        .a_out(a_mid), .b_out(b_mid), .c_out(c_mid), .d_out(d_mid),
+        .e_out(e_mid), .f_out(f_mid), .g_out(g_mid), .h_out(h_mid)
+    );
+
+    // Round 1 Logic
+    wire [31:0] a_next, b_next, c_next, d_next, e_next, f_next, g_next, h_next;
+    sha256_round round1_inst (
+        .Kj(K1), .Wj(W1_tm16),
+        .a_in(a_mid), .b_in(b_mid), .c_in(c_mid), .d_in(d_mid),
+        .e_in(e_mid), .f_in(f_mid), .g_in(g_mid), .h_in(h_mid),
+        .a_out(a_next), .b_out(b_next), .c_out(c_next), .d_out(d_next),
+        .e_out(e_next), .f_out(f_next), .g_out(g_next), .h_out(h_next)
+    );
+
+    // Register boundary
+    always @(posedge clk) begin
+        if (rst) valid_out <= 1'b0;
+        else valid_out <= valid_in;
+        
+        H_base_out <= H_base_in;
+        H_out      <= {a_next, b_next, c_next, d_next, e_next, f_next, g_next, h_next};
+        W_out      <= {W_in[447:0], W0_next, W1_next}; // Shift left 2 words
+    end
 endmodule
-module sha256_s1 (
-          input wire [31:0] x,
-          output wire [31:0] s1
-          );
-
-      assign s1 = ({x[16:0], x[31:17]} ^ {x[18:0], x[31:19]} ^ (x >> 10));
-
-      endmodule
-module W_machine #(parameter WORDSIZE=1) (
-          input clk,
-          input [WORDSIZE*16-1:0] M,
-          input M_valid,
-          output [WORDSIZE-1:0] W_tm2, W_tm15,
-          input [WORDSIZE-1:0] s1_Wtm2, s0_Wtm15,
-          output [WORDSIZE-1:0] W
-          );
-
-      // W(t-n) values, from the perspective of Wt_next
-      assign W_tm2 = W_stack_q[WORDSIZE*2-1:WORDSIZE*1];
-      assign W_tm15 = W_stack_q[WORDSIZE*15-1:WORDSIZE*14];
-      wire [WORDSIZE-1:0] W_tm7 = W_stack_q[WORDSIZE*7-1:WORDSIZE*6];
-      wire [WORDSIZE-1:0] W_tm16 = W_stack_q[WORDSIZE*16-1:WORDSIZE*15];
-      // Wt_next is the next Wt to be pushed to the queue, will be consumed in 16 rounds
-      wire [WORDSIZE-1:0] Wt_next = s1_Wtm2 + W_tm7 + s0_Wtm15 + W_tm16;
-
-      reg [WORDSIZE*16-1:0] W_stack_q;
-      wire [WORDSIZE*16-1:0] W_stack_d = {W_stack_q[WORDSIZE*15-1:0], Wt_next};
-      assign W = W_stack_q[WORDSIZE*16-1:WORDSIZE*15];
-
-      always @(posedge clk)
-      begin
-          if (M_valid) begin
-              W_stack_q <= M;
-          end else begin
-              W_stack_q <= W_stack_d;
-          end
-      end
-
-      endmodule
       
 module sha256_S1 (
           input wire [31:0] x,
@@ -110,7 +143,7 @@ module Ch #(parameter WORDSIZE=0) (
       assign Ch = ((x & y) ^ (~x & z));
       endmodule
       
-module sha256_S0 (
+    module sha256_S0 (
           input wire [31:0] x,
           output wire [31:0] S0
           );
@@ -147,120 +180,120 @@ module sha2_round #(parameter WORDSIZE=0) (
       endmodule
       
 module sha256_round (
-          input [31:0] Kj, Wj,
-          input [31:0] a_in, b_in, c_in, d_in, e_in, f_in, g_in, h_in,
-          output [31:0] a_out, b_out, c_out, d_out, e_out, f_out, g_out, h_out
-          );
-
-      wire [31:0] Ch_e_f_g, Maj_a_b_c, S0_a, S1_e;
-
-      Ch #(.WORDSIZE(32)) Ch (
-          .x(e_in), .y(f_in), .z(g_in), .Ch(Ch_e_f_g)
-      );
-
-      Maj #(.WORDSIZE(32)) Maj (
-          .x(a_in), .y(b_in), .z(c_in), .Maj(Maj_a_b_c)
-      );
-
-      sha256_S0 S0 (
-          .x(a_in), .S0(S0_a)
-      );
-
-      sha256_S1 S1 (
-          .x(e_in), .S1(S1_e)
-      );
-
-      sha2_round #(.WORDSIZE(32)) sha256_round_inner (
-          .Kj(Kj), .Wj(Wj),
-          .a_in(a_in), .b_in(b_in), .c_in(c_in), .d_in(d_in),
-          .e_in(e_in), .f_in(f_in), .g_in(g_in), .h_in(h_in),
-          .Ch_e_f_g(Ch_e_f_g), .Maj_a_b_c(Maj_a_b_c), .S0_a(S0_a), .S1_e(S1_e),
-          .a_out(a_out), .b_out(b_out), .c_out(c_out), .d_out(d_out),
-          .e_out(e_out), .f_out(f_out), .g_out(g_out), .h_out(h_out)
-      );
-
-      endmodule
-module sha256_block (
-          input clk, rst,
-          input [255:0] H_in,
-          input [511:0] M_in,
-          input input_valid,
-          output [255:0] H_out,
-          output output_valid
-          );
-
-      reg [6:0] round;
-      wire [31:0] a_in = H_in[255:224], b_in = H_in[223:192], c_in = H_in[191:160], d_in = H_in[159:128];
-      wire [31:0] e_in = H_in[127:96], f_in = H_in[95:64], g_in = H_in[63:32], h_in = H_in[31:0];
-      reg [31:0] a_q, b_q, c_q, d_q, e_q, f_q, g_q, h_q;
-      wire [31:0] a_d, b_d, c_d, d_d, e_d, f_d, g_d, h_d;
-      wire [31:0] W_tm2, W_tm15, s1_Wtm2, s0_Wtm15, Wj, Kj;
-      assign H_out = {
-          a_in + a_q, b_in + b_q, c_in + c_q, d_in + d_q, e_in + e_q, f_in + f_q, g_in + g_q, h_in + h_q
-      };
-      assign output_valid = round == 64;
-
-      always @(posedge clk)
-      begin
-          if (input_valid) begin
-              a_q <= a_in; b_q <= b_in; c_q <= c_in; d_q <= d_in;
-              e_q <= e_in; f_q <= f_in; g_q <= g_in; h_q <= h_in;
-              round <= 0;
-          end else begin
-              a_q <= a_d; b_q <= b_d; c_q <= c_d; d_q <= d_d;
-              e_q <= e_d; f_q <= f_d; g_q <= g_d; h_q <= h_d;
-              round <= round + 1;
-          end
-      end
-
-      sha256_round sha256_round (
-          .Kj(Kj), .Wj(Wj),
-          .a_in(a_q), .b_in(b_q), .c_in(c_q), .d_in(d_q),
-          .e_in(e_q), .f_in(f_q), .g_in(g_q), .h_in(h_q),
-          .a_out(a_d), .b_out(b_d), .c_out(c_d), .d_out(d_d),
-          .e_out(e_d), .f_out(f_d), .g_out(g_d), .h_out(h_d)
-      );
-
-      sha256_s0 sha256_s0 (.x(W_tm15), .s0(s0_Wtm15));
-      sha256_s1 sha256_s1 (.x(W_tm2), .s1(s1_Wtm2));
-
-      W_machine #(.WORDSIZE(32)) W_machine (
-          .clk(clk),
-          .M(M_in), .M_valid(input_valid),
-          .W_tm2(W_tm2), .W_tm15(W_tm15),
-          .s1_Wtm2(s1_Wtm2), .s0_Wtm15(s0_Wtm15),
-          .W(Wj)
-      );
-
-      sha256_K_machine sha256_K_machine (
-          .clk(clk), .rst(input_valid), .K(Kj)
-      );
-
-      endmodule
-
-module sha256_top (
-    input clk,
-    input rst,
-    input start,
-    input [511:0] block,
-    output [255:0] hash,
-    output done
+    input [31:0] Kj, Wj,
+    input [31:0] a_in, b_in, c_in, d_in, e_in, f_in, g_in, h_in,
+    output [31:0] a_out, b_out, c_out, d_out, e_out, f_out, g_out, h_out
 );
+    wire [31:0] Ch_e_f_g, Maj_a_b_c, S0_a, S1_e;
 
-    wire [255:0] H0;
-
-    sha256_H_0 H_init (
-        .H_0(H0)
+    Ch #(.WORDSIZE(32)) Ch (
+        .x(e_in), .y(f_in), .z(g_in), .Ch(Ch_e_f_g)
+    );
+    Maj #(.WORDSIZE(32)) Maj (
+        .x(a_in), .y(b_in), .z(c_in), .Maj(Maj_a_b_c)
+    );
+    sha256_S0 S0 (
+        .x(a_in), .S0(S0_a)
+    );
+    sha256_S1 S1 (
+        .x(e_in), .S1(S1_e)
     );
 
+    // Balanced Addition Tree for T1
+    wire [31:0] T1_part1 = h_in + S1_e;
+    wire [31:0] T1_part2 = Ch_e_f_g + Kj;
+    wire [31:0] T1_part3 = T1_part1 + T1_part2;
+    wire [31:0] T1       = T1_part3 + Wj;
+
+    // Balanced Addition Tree for T2
+    wire [31:0] T2 = S0_a + Maj_a_b_c;
+
+    assign a_out = T1 + T2;
+    assign b_out = a_in;
+    assign c_out = b_in;
+    assign d_out = c_in;
+    assign e_out = d_in + T1;
+    assign f_out = e_in;
+    assign g_out = f_in;
+    assign h_out = g_in;
+
+endmodule
+      
+module sha256_block (
+    input wire clk,
+    input wire rst,
+    input wire [255:0] H_in,
+    input wire [511:0] M_in,
+    input wire input_valid,
+    output wire [255:0] H_out,
+    output wire output_valid
+);
+
+    wire [511:0] W_stages [0:32];
+    wire [255:0] H_stages [0:32];
+    wire [255:0] H_base_stages [0:32];
+    wire valid_stages [0:32];
+
+    // Pipeline entry
+    assign W_stages[0] = M_in;
+    assign H_stages[0] = H_in;
+    assign H_base_stages[0] = H_in;
+    assign valid_stages[0] = input_valid;
+
+    // Generate 32 pipeline stages (2 rounds per stage = 64 rounds)
+    genvar i;
+    generate
+        for (i = 0; i < 32; i = i + 1) begin : pipe
+            sha256_pipeline_stage_dual #(
+                .ROUND_BASE(i * 2)
+            ) stage_inst (
+                .clk(clk),
+                .rst(rst),
+                .valid_in(valid_stages[i]),
+                .W_in(W_stages[i]),
+                .H_in(H_stages[i]),
+                .H_base_in(H_base_stages[i]),
+                .valid_out(valid_stages[i+1]),
+                .W_out(W_stages[i+1]),
+                .H_out(H_stages[i+1]),
+                .H_base_out(H_base_stages[i+1])
+            );
+        end
+    endgenerate
+
+    // Final Addition (H_initial + H_final)
+    wire [31:0] a_fin = H_stages[32][255:224] + H_base_stages[32][255:224];
+    wire [31:0] b_fin = H_stages[32][223:192] + H_base_stages[32][223:192];
+    wire [31:0] c_fin = H_stages[32][191:160] + H_base_stages[32][191:160];
+    wire [31:0] d_fin = H_stages[32][159:128] + H_base_stages[32][159:128];
+    wire [31:0] e_fin = H_stages[32][127:96]  + H_base_stages[32][127:96];
+    wire [31:0] f_fin = H_stages[32][95:64]   + H_base_stages[32][95:64];
+    wire [31:0] g_fin = H_stages[32][63:32]   + H_base_stages[32][63:32];
+    wire [31:0] h_fin = H_stages[32][31:0]    + H_base_stages[32][31:0];
+
+    // Pipeline exit
+    assign H_out = {a_fin, b_fin, c_fin, d_fin, e_fin, f_fin, g_fin, h_fin};
+    assign output_valid = valid_stages[32];
+
+endmodule
+
+module sha256_top (
+    input wire clk,
+    input wire rst,
+    input wire start,
+    input wire [255:0] midstate,     // NEW: Injected starting state
+    input wire [511:0] block_chunk2, // NEW: Only the chunk containing the nonce
+    output wire [255:0] hash,
+    output wire done
+);
+    // The pipeline now starts from the injected midstate instead of H0
     sha256_block dut (
         .clk(clk),
         .rst(rst),
-        .H_in(H0),
-        .M_in(block),
+        .H_in(midstate),       
+        .M_in(block_chunk2),
         .input_valid(start),
         .H_out(hash),
         .output_valid(done)
     );
-
 endmodule
