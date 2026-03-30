@@ -80,4 +80,13 @@ module miner_top (
             end
         end
     end
+    reg print_done; // New register to track if we already printed
+    always @(posedge clk) begin
+        if (rst) begin
+            print_done <= 1'b0;
+        end else if (nonce_found && !print_done) begin
+            $display("MINER: SUCCESS! Nonce found: 0x%08h", winning_nonce);
+            print_done <= 1'b1; // This "locks" the print so it only happens once
+        end
+    end
 endmodule
